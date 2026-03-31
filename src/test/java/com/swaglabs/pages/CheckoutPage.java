@@ -1,9 +1,7 @@
 package com.swaglabs.pages;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 
 // Covers all 3 checkout steps:
 //   Step 1 - fill info  (/checkout-step-one.html)
@@ -38,15 +36,16 @@ public class CheckoutPage extends BasePage {
         type(LAST_NAME_INPUT, lastName);
         type(POSTAL_CODE, postalCode);
         
-        // Submit form: get the button, click it, and also try to submit any parent form
-        WebElement button = driver.findElement(CONTINUE_BUTTON);
-        ((JavascriptExecutor) driver).executeScript(
-            "arguments[0].click();" +
-            "if(arguments[0].form) { arguments[0].form.submit(); }" +
-            "var forms = document.querySelectorAll('form');" +
-            "if(forms.length > 0) { forms[0].submit(); }",
-            button
-        );
+        // Submit using standard click on the button
+        // The form submission happens automatically in the React app
+        click(CONTINUE_BUTTON);
+        
+        // Add a small wait for the page transition to start
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         
         waitForUrlToContain("checkout-step-two");
         return this;
