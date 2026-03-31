@@ -17,7 +17,6 @@ public class CheckoutPage extends BasePage {
     private static final By POSTAL_CODE      = By.cssSelector("[data-test='postalCode']");
     private static final By CONTINUE_BUTTON  = By.cssSelector("[data-test='continue']");
     private static final By ERROR_MESSAGE    = By.cssSelector("[data-test='error']");
-    private static final By CHECKOUT_FORM    = By.cssSelector(".checkout_info");
 
     // Step 2
     private static final By FINISH_BUTTON = By.cssSelector("[data-test='finish']");
@@ -38,10 +37,10 @@ public class CheckoutPage extends BasePage {
         type(FIRST_NAME_INPUT, firstName);
         type(LAST_NAME_INPUT, lastName);
         type(POSTAL_CODE, postalCode);
-        // Use JavaScript to submit form - most reliable in headless environment
+        // Use JavaScript to click the button - most reliable in headless environment
         JavascriptExecutor js = (JavascriptExecutor) driver;
-        WebElement form = driver.findElement(CHECKOUT_FORM);
-        js.executeScript("arguments[0].submit();", form);
+        WebElement button = driver.findElement(CONTINUE_BUTTON);
+        js.executeScript("arguments[0].click();", button);
         waitForUrlToContain("checkout-step-two");
         return this;
     }
