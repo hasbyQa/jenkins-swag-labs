@@ -5,26 +5,19 @@ services:
     image: jenkins/jenkins:lts
     container_name: jenkins-ci
     ports:
-      - "8080:8080"           # Jenkins web UI
-      - "50000:50000"         # Jenkins agent port
+      - "8080:8080"
+      - "50000:50000"
     environment:
       JENKINS_OPTS: "--argumentsRealm.roles.global=admin"
       JAVA_OPTS: "-Xmx512m -Xms512m"
     volumes:
-      # Persist Jenkins configuration and job data
       - jenkins_home:/var/jenkins_home
-      
-      # Mount Docker socket to allow Jenkins to run Docker commands
       - /var/run/docker.sock:/var/run/docker.sock
-      
-      # Mount Maven cache to speed up builds
       - maven_cache:/root/.m2
     networks:
       - jenkins-network
     restart: unless-stopped
 
-  # Optional: Ngrok for webhook tunneling to GitHub
-  # Only needed if running Jenkins locally and want GitHub webhooks
   ngrok:
     image: ngrok/ngrok:latest
     container_name: ngrok-tunnel
@@ -33,7 +26,7 @@ services:
       - "8080"
       - "--authtoken=${NGROK_AUTHTOKEN}"
     ports:
-      - "4040:4040"           # Ngrok web UI
+      - "4040:4040"
     depends_on:
       - jenkins
     networks:
@@ -42,7 +35,7 @@ services:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
     restart: unless-stopped
     profiles:
-      - ngrok                 # Only run with 'docker-compose --profile ngrok up'
+      - ngrok
 
 volumes:
   jenkins_home:
