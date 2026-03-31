@@ -38,8 +38,10 @@ public class CheckoutPage extends BasePage {
         type(FIRST_NAME_INPUT, firstName);
         type(LAST_NAME_INPUT, lastName);
         type(POSTAL_CODE, postalCode);
-        // Use standard click with proper wait for element to be clickable
-        click(CONTINUE_BUTTON);
+        // Use JavaScript to submit form - most reliable in headless environment
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        WebElement form = driver.findElement(CHECKOUT_FORM);
+        js.executeScript("arguments[0].submit();", form);
         waitForUrlToContain("checkout-step-two");
         return this;
     }
