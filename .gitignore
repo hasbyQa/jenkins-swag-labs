@@ -32,3 +32,9 @@ Thumbs.db        # Windows thumbnail cache
 # Screenshots or logs generated during test runs (local only)
 screenshots/
 logs/
+
+# ── Allure Reports ──────────────────────────────────────────────
+# Allure command-line tool and generated reports (build artifacts)
+.allure/
+allure-results/
+
