@@ -45,7 +45,8 @@ pipeline {
                     reportFiles: 'index.html',
                     reportName: '📊 Allure Test Report',
                     keepAll: true,
-                    alwaysLinkToLastBuild: true
+                    alwaysLinkToLastBuild: true,
+                    allowMissing: false
                 ])
                 
                 echo '✅ Test reports generated successfully!'
