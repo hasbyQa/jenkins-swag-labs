@@ -1,1 +1,115 @@
-<h1>Reports</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test Reports - Jenkins CI/CD</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 50px; }
+        h1 { font-size: 3em; margin-bottom: 10px; }
+        .status { display: inline-block; background: #4CAF50; color: white; padding: 10px 20px; border-radius: 20px; margin-top: 15px; font-weight: bold; }
+        .reports-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-bottom: 50px; }
+        .card { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); transition: transform 0.3s; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 15px 50px rgba(0,0,0,0.3); }
+        .card h3 { color: #667eea; margin-bottom: 15px; }
+        .btn { display: inline-block; background: #667eea; color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: bold; transition: background 0.3s; }
+        .btn:hover { background: #764ba2; }
+        .builds { background: white; border-radius: 12px; padding: 40px; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .builds h2 { color: #333; margin-bottom: 30px; border-bottom: 3px solid #667eea; padding-bottom: 15px; }
+        .build-item { padding: 20px; background: #f8f9fa; margin: 15px 0; border-left: 5px solid #667eea; border-radius: 6px; }
+        .build-item h4 { color: #333; margin-bottom: 5px; }
+        .build-item a { background: #667eea; color: white; padding: 8px 20px; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block; }
+        .build-item a:hover { background: #764ba2; }
+        .empty { text-align: center; padding: 40px; color: #999; }
+        footer { text-align: center; color: white; padding: 20px; opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧪 Swag Labs Test Reports</h1>
+            <p>Jenkins CI/CD - Automated Test Results & Allure Reports</p>
+            <div class="status">✅ Reports System Ready</div>
+        </header>
+
+        <div class="reports-grid">
+            <div class="card">
+                <h3>📊 Allure Reports</h3>
+                <p>Detailed test execution reports with screenshots, logs, and performance metrics.</p>
+                <a href="#builds" class="btn">View Reports</a>
+            </div>
+            <div class="card">
+                <h3>🔄 CI/CD Pipeline</h3>
+                <p>Automated build and test pipeline triggered on every GitHub push.</p>
+                <a href="https://github.com/hasbyQa/jenkins-swag-labs" class="btn">View Repository</a>
+            </div>
+            <div class="card">
+                <h3>📈 Test Coverage</h3>
+                <p>Comprehensive test coverage with 19+ tests across Login, Cart, and Checkout flows.</p>
+                <a href="#builds" class="btn">View History</a>
+            </div>
+        </div>
+
+        <div class="builds" id="builds">
+            <h2>📋 Build History</h2>
+            <div id="builds-list">
+                <div class="empty">
+                    <p>🚀 Waiting for first build...</p>
+                    <p style="font-size: 0.9em;">Trigger a Jenkins build to see Allure reports here</p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>🚀 Powered by Jenkins | Docker | Allure | Maven | Selenium<br>
+            Last updated: <span id="update-time">Just now</span></p>
+        </footer>
+    </div>
+
+    <script>
+        // Auto-populate builds from directory listing
+        function loadBuilds() {
+            const list = document.getElementById('builds-list');
+            const time = document.getElementById('update-time');
+            time.textContent = new Date().toLocaleString();
+            
+            // This will be auto-updated when Jenkins pushes build reports
+            fetch('.')
+                .then(r => r.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const links = Array.from(doc.querySelectorAll('a'))
+                        .filter(a => a.textContent.match(/^build-\d+\/$/))
+                        .sort((a, b) => {
+                            const numA = parseInt(a.textContent.match(/\d+/)[0]);
+                            const numB = parseInt(b.textContent.match(/\d+/)[0]);
+                            return numB - numA;
+                        });
+                    
+                    if (links.length > 0) {
+                        list.innerHTML = links.map(link => {
+                            const buildNum = link.textContent.match(/\d+/)[0];
+                            return `
+                                <div class="build-item">
+                                    <h4>Build #${buildNum}</h4>
+                                    <p>Test Report</p>
+                                    <a href="${link.href}">📊 View Allure Report</a>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                })
+                .catch(() => {
+                    // If fetch fails, keep the empty state
+                });
+        }
+        
+        window.addEventListener('load', loadBuilds);
+        setInterval(loadBuilds, 60000); // Refresh every minute
+    </script>
+</body>
+</html>
