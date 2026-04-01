@@ -6,12 +6,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- ============================================================
-         PROJECT IDENTITY
-         groupId   : reverse domain — acts as a namespace
-         artifactId: the project/jar name
-         version   : current version of this project
-    ============================================================ -->
+    <!-- PROJECT IDENTITY -->
     <groupId>com.swaglabs</groupId>
     <artifactId>swag-labs-tests</artifactId>
     <version>1.0-SNAPSHOT</version>
@@ -23,44 +18,29 @@
         Selenium WebDriver and JUnit 5, containerized with Docker.
     </description>
 
-    <!-- ============================================================
-         GLOBAL PROPERTIES
-         Define versions in one place — easy to upgrade later
-    ============================================================ -->
+    <!-- GLOBAL PROPERTIES -->
     <properties>
-        <!-- Java version -->
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <!-- Dependency versions — change here to upgrade everywhere -->
         <selenium.version>4.18.1</selenium.version>
         <junit.version>5.10.2</junit.version>
         <webdrivermanager.version>5.7.0</webdrivermanager.version>
         <maven.surefire.version>3.2.5</maven.surefire.version>
+        <allure.version>2.25.0</allure.version>
     </properties>
 
-    <!-- ============================================================
-         DEPENDENCIES
-         Maven downloads these from Maven Central automatically.
-         Each <dependency> block = one library.
-    ============================================================ -->
+    <!-- DEPENDENCIES -->
     <dependencies>
 
-        <!-- ── Selenium WebDriver ──────────────────────────────────
-             The core library that drives the browser.
-             selenium-java includes support for Chrome, Firefox, etc.
-        ─────────────────────────────────────────────────────────── -->
+        <!-- Selenium WebDriver -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
             <version>${selenium.version}</version>
         </dependency>
 
-        <!-- ── JUnit 5 (Jupiter) API ───────────────────────────────
-             Provides @Test, @BeforeEach, @AfterEach, assertions, etc.
-             'test' scope = only used during testing, not in production
-        ─────────────────────────────────────────────────────────── -->
+        <!-- JUnit 5 API -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -68,10 +48,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- ── JUnit 5 Engine ──────────────────────────────────────
-             The engine that actually RUNS JUnit 5 tests.
-             Without this, Maven cannot discover or execute tests.
-        ─────────────────────────────────────────────────────────── -->
+        <!-- JUnit 5 Engine -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
@@ -79,10 +56,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- ── WebDriverManager ────────────────────────────────────
-             Automatically downloads the correct ChromeDriver version
-             to match your installed Chrome. No manual setup needed.
-        ─────────────────────────────────────────────────────────── -->
+        <!-- WebDriverManager -->
         <dependency>
             <groupId>io.github.bonigarcia</groupId>
             <artifactId>webdrivermanager</artifactId>
@@ -90,30 +64,35 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- ── Allure JUnit5 Listener ──────────────────────────────
-             Generates detailed HTML test reports with screenshots,
-             timings, and test history.
-        ─────────────────────────────────────────────────────────── -->
+        <!-- Allure JUnit5 Listener - Generates detailed reports -->
         <dependency>
             <groupId>io.qameta.allure</groupId>
             <artifactId>allure-junit5</artifactId>
-            <version>2.25.0</version>
+            <version>${allure.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- SLF4J API - Logging facade -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.12</version>
+        </dependency>
+
+        <!-- Logback - SLF4J implementation with Allure integration -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.14</version>
         </dependency>
 
     </dependencies>
 
-    <!-- ============================================================
-         BUILD PLUGINS
-         Plugins extend Maven's capabilities.
-    ============================================================ -->
+    <!-- BUILD PLUGINS -->
     <build>
         <plugins>
 
-            <!-- ── Maven Compiler Plugin ───────────────────────────
-                 Tells Maven which Java version to compile with.
-                 Must match the <properties> above.
-            ─────────────────────────────────────────────────────── -->
+            <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -124,12 +103,7 @@
                 </configuration>
             </plugin>
 
-            <!-- ── Maven Surefire Plugin ───────────────────────────
-                 The plugin responsible for running tests.
-                 Version 3.x is required for JUnit 5 support.
-                 useModulePath=false avoids Java module system issues.
-                 Allure listener generates test reports.
-            ─────────────────────────────────────────────────────── -->
+            <!-- Maven Surefire Plugin - Runs tests with Allure listener -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -145,10 +119,7 @@
                 </configuration>
             </plugin>
 
-            <!-- ── Allure Maven Plugin ─────────────────────────────
-                 Generates HTML test reports from Allure results.
-                 Run: mvn allure:report
-            ─────────────────────────────────────────────────────── -->
+            <!-- Allure Maven Plugin - Generates HTML reports -->
             <plugin>
                 <groupId>io.qameta.allure</groupId>
                 <artifactId>allure-maven</artifactId>
