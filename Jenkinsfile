@@ -1,41 +1,24 @@
 #!/usr/bin/env groovy
 
-// ── Parse test summary from surefire reports ─────────────────────────────────
+// ── Read test summary from Jenkins' already-parsed JUnit results ──────────────
+// Uses currentBuild.testResultAction populated by the junit() step — no XML
+// file parsing needed, works regardless of workspace state.
 def getTestSummary() {
     def summary = [total: 0, passed: 0, failed: 0, skipped: 0, failedTests: []]
     try {
-        def fileList = sh(
-            script: 'find target/surefire-reports -name "TEST-*.xml" 2>/dev/null || true',
-            returnStdout: true
-        ).trim()
+        def tr = currentBuild.testResultAction
+        if (tr != null) {
+            summary.total   = tr.totalCount
+            summary.failed  = tr.failCount
+            summary.skipped = tr.skipCount
+            summary.passed  = summary.total - summary.failed - summary.skipped
 
-        if (fileList) {
-            fileList.split('\n').each { filePath ->
-                filePath = filePath.trim()
-                if (filePath) {
-                    def content = readFile(filePath)
-                    def xml = new XmlSlurper().parseText(content)
-                    def total    = xml.@tests.toInteger()
-                    def failures = xml.@failures.toInteger()
-                    def errors   = xml.@errors.toInteger()
-                    def skipped  = xml.@skipped.toInteger()
-
-                    summary.total   += total
-                    summary.passed  += (total - failures - errors - skipped)
-                    summary.failed  += (failures + errors)
-                    summary.skipped += skipped
-
-                    xml.testcase.each { tc ->
-                        if (tc.failure || tc.error) {
-                            def error = tc.failure ?: tc.error
-                            summary.failedTests << [
-                                name     : tc.@name,
-                                className: tc.@classname?.tokenize('.')?.last() ?: 'Unknown',
-                                message  : error.text()?.take(300) ?: 'No message'
-                            ]
-                        }
-                    }
-                }
+            tr.failedTests.each { test ->
+                summary.failedTests << [
+                    name     : test.name,
+                    className: test.className?.tokenize('.')?.last() ?: 'Unknown',
+                    message  : test.errorDetails?.take(300) ?: 'No message'
+                ]
             }
         }
         echo "Summary: total=${summary.total} passed=${summary.passed} failed=${summary.failed} skipped=${summary.skipped}"
