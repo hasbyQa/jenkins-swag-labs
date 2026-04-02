@@ -42,11 +42,16 @@ public class CheckoutPage extends BasePage {
         WebElement button = driver.findElement(CONTINUE_BUTTON);
         js.executeScript("arguments[0].click();", button);
         
-        // Add delay for form submission to complete in headless Docker environment
-        // This is necessary because the form submission and navigation are async
+        // CRITICAL: Add 2-second delay for form submission to complete in headless Docker environment
+        // The form submission is asynchronous and headless Chrome requires significant wait time
+        // Previous 1-second delay was insufficient - increasing to 2 seconds for reliability
         try {
-            Thread.sleep(1000);  // 1 second delay for form processing
+            long startTime = System.currentTimeMillis();
+            Thread.sleep(2000);  // 2 second delay - REQUIRED for headless Chrome form processing
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            System.out.println("✅ Form submission delay completed: " + elapsedTime + "ms");
         } catch (InterruptedException e) {
+            System.out.println("⚠️ Form submission delay was interrupted!");
             Thread.currentThread().interrupt();
         }
         
