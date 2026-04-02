@@ -103,19 +103,19 @@
                 </configuration>
             </plugin>
 
-            <!-- Maven Surefire Plugin - Runs tests with Allure listener -->
+            <!-- Maven Surefire Plugin - Runs tests with Allure extension -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven.surefire.version}</version>
                 <configuration>
                     <useModulePath>false</useModulePath>
-                    <properties>
-                        <property>
-                            <name>listener</name>
-                            <value>io.qameta.allure.junit5.AllureJunit5</value>
-                        </property>
-                    </properties>
+                    <systemPropertyVariables>
+                        <!-- Required for JUnit 5: auto-discovers AllureJunit5 extension via ServiceLoader -->
+                        <junit.jupiter.extensions.autodetection.enabled>true</junit.jupiter.extensions.autodetection.enabled>
+                        <!-- Write allure results to standard location -->
+                        <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
 
