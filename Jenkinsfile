@@ -4,27 +4,37 @@
 def getTestSummary() {
     def summary = [total: 0, passed: 0, failed: 0, skipped: 0, failedTests: []]
     try {
-        def files = findFiles(glob: 'target/surefire-reports/TEST-*.xml')
-        for (def file : files) {
-            def xml = new XmlSlurper().parse(file.path)
-            def total = xml.@tests.toInteger()
-            def failures = xml.@failures.toInteger()
-            def errors = xml.@errors.toInteger()
-            def skipped = xml.@skipped.toInteger()
+        def fileList = sh(
+            script: 'find target/surefire-reports -name "TEST-*.xml" 2>/dev/null || true',
+            returnStdout: true
+        ).trim()
 
-            summary.total += total
-            summary.passed += (total - failures - errors - skipped)
-            summary.failed += (failures + errors)
-            summary.skipped += skipped
+        if (fileList) {
+            fileList.split('\n').each { filePath ->
+                filePath = filePath.trim()
+                if (filePath) {
+                    def content = readFile(filePath)
+                    def xml = new XmlSlurper().parseText(content)
+                    def total    = xml.@tests.toInteger()
+                    def failures = xml.@failures.toInteger()
+                    def errors   = xml.@errors.toInteger()
+                    def skipped  = xml.@skipped.toInteger()
 
-            xml.testcase.each { tc ->
-                if (tc.failure || tc.error) {
-                    def error = tc.failure ?: tc.error
-                    summary.failedTests << [
-                        name: tc.@name,
-                        className: tc.@classname?.tokenize('.')?.last() ?: 'Unknown',
-                        message: error.text()?.take(300) ?: 'No message'
-                    ]
+                    summary.total   += total
+                    summary.passed  += (total - failures - errors - skipped)
+                    summary.failed  += (failures + errors)
+                    summary.skipped += skipped
+
+                    xml.testcase.each { tc ->
+                        if (tc.failure || tc.error) {
+                            def error = tc.failure ?: tc.error
+                            summary.failedTests << [
+                                name     : tc.@name,
+                                className: tc.@classname?.tokenize('.')?.last() ?: 'Unknown',
+                                message  : error.text()?.take(300) ?: 'No message'
+                            ]
+                        }
+                    }
                 }
             }
         }

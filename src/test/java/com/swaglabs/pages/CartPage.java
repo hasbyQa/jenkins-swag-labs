@@ -45,7 +45,7 @@ public class CartPage extends BasePage {
     }
 
     public InventoryPage continueShopping() {
-        click(CONTINUE_BUTTON);
+        jsClick(CONTINUE_BUTTON);
         waitForUrlToContain("inventory");
         return new InventoryPage(driver);
     }
