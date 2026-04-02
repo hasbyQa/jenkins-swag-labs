@@ -82,33 +82,34 @@ pipeline {
             }
         }
 
-        stage('Allure Report') {
+        stage('Reports') {
             steps {
-                echo "Generating Allure Report..."
-                sh 'mvn allure:report -B -DskipTests=true || true'
+                echo "Publishing test reports..."
 
+                // Publish JUnit results
                 junit testResults: 'target/surefire-reports/**/*.xml',
                       allowEmptyResults: true
 
-                publishHTML([
-                    reportDir: 'target/site/allure-report',
-                    reportFiles: 'index.html',
-                    reportName: 'Allure Test Report',
-                    keepAll: true,
-                    alwaysLinkToLastBuild: true,
-                    allowMissing: true
+                // Publish Allure Report using the native Jenkins Allure plugin
+                // This avoids Jenkins CSP blocking the HTML — report is at ${BUILD_URL}allure/
+                allure([
+                    results: [[path: 'target/allure-results']],
+                    reportBuildPolicy: 'ALWAYS',
+                    includeProperties: false
                 ])
 
                 archiveArtifacts artifacts: 'target/surefire-reports/**/*.xml, target/allure-results/**',
                                   allowEmptyArchive: true
 
-                echo "Allure Report generated and published!"
+                echo "Reports published!"
             }
         }
     }
 
     post {
-        always {
+        // cleanup runs last — after success/failure/unstable — so getTestSummary()
+        // can still read surefire XMLs from the workspace before it is wiped
+        cleanup {
             echo "Cleaning workspace..."
             cleanWs()
         }
@@ -118,7 +119,6 @@ pipeline {
                 def ts = getTestSummary()
                 def passRate = ts.total > 0 ? (int)((ts.passed / ts.total) * 100) : 0
 
-                // Export to shell environment
                 env.TOTAL_TESTS  = "${ts.total}"
                 env.PASSED_TESTS = "${ts.passed}"
                 env.FAILED_TESTS = "${ts.failed}"
@@ -137,14 +137,14 @@ Branch     : ${env.GIT_BRANCH ?: 'unknown'}
 Commit     : ${env.GIT_COMMIT ?: 'unknown'}
 
 TEST RESULTS:
-  Total   : ${ts.total}
-  Passed  : ${ts.passed}
-  Failed  : ${ts.failed}
-  Skipped : ${ts.skipped}
+  Total    : ${ts.total}
+  Passed   : ${ts.passed}
+  Failed   : ${ts.failed}
+  Skipped  : ${ts.skipped}
   Pass Rate: ${passRate}%
 
 REPORTS:
-  Allure Report : ${BUILD_URL}Allure_Test_Report/
+  Allure Report : ${BUILD_URL}allure/
   JUnit Results : ${BUILD_URL}testReport/
   Console Output: ${BUILD_URL}console/
 
@@ -170,11 +170,7 @@ Full details: ${BUILD_URL}""",
                             "blocks": [
                               {
                                 "type": "header",
-                                "text": {
-                                  "type": "plain_text",
-                                  "text": "BUILD PASSED - Swag Labs Tests",
-                                  "emoji": true
-                                }
+                                "text": {"type": "plain_text", "text": "BUILD PASSED - Swag Labs Tests", "emoji": true}
                               },
                               {
                                 "type": "section",
@@ -201,7 +197,7 @@ Full details: ${BUILD_URL}""",
                                   {
                                     "type": "button",
                                     "text": {"type": "plain_text", "text": "View Allure Report", "emoji": true},
-                                    "url": "'"${BUILD_URL}"'Allure_Test_Report/",
+                                    "url": "'"${BUILD_URL}"'allure/",
                                     "style": "primary"
                                   },
                                   {
@@ -227,13 +223,11 @@ Full details: ${BUILD_URL}""",
                 def ts = getTestSummary()
                 def passRate = ts.total > 0 ? (int)((ts.passed / ts.total) * 100) : 0
 
-                // Export to shell environment
                 env.TOTAL_TESTS  = "${ts.total}"
                 env.PASSED_TESTS = "${ts.passed}"
                 env.FAILED_TESTS = "${ts.failed}"
                 env.PASS_RATE    = "${passRate}"
 
-                // Build failed-test detail string for email
                 def failedTestDetails = ''
                 if (ts.failedTests.size() > 0) {
                     ts.failedTests.take(10).eachWithIndex { test, idx ->
@@ -256,15 +250,15 @@ Branch     : ${env.GIT_BRANCH ?: 'unknown'}
 Commit     : ${env.GIT_COMMIT ?: 'unknown'}
 
 TEST RESULTS:
-  Total   : ${ts.total}
-  Passed  : ${ts.passed}
-  Failed  : ${ts.failed}
-  Skipped : ${ts.skipped}
+  Total    : ${ts.total}
+  Passed   : ${ts.passed}
+  Failed   : ${ts.failed}
+  Skipped  : ${ts.skipped}
   Pass Rate: ${passRate}%
 
 FAILED TESTS:${failedTestDetails}
 REPORTS:
-  Allure Report : ${BUILD_URL}Allure_Test_Report/
+  Allure Report : ${BUILD_URL}allure/
   JUnit Results : ${BUILD_URL}testReport/
   Console Output: ${BUILD_URL}console/
 
@@ -290,11 +284,7 @@ Full details: ${BUILD_URL}""",
                             "blocks": [
                               {
                                 "type": "header",
-                                "text": {
-                                  "type": "plain_text",
-                                  "text": "BUILD FAILED - Swag Labs Tests",
-                                  "emoji": true
-                                }
+                                "text": {"type": "plain_text", "text": "BUILD FAILED - Swag Labs Tests", "emoji": true}
                               },
                               {
                                 "type": "section",
@@ -321,7 +311,7 @@ Full details: ${BUILD_URL}""",
                                   {
                                     "type": "button",
                                     "text": {"type": "plain_text", "text": "View Allure Report", "emoji": true},
-                                    "url": "'"${BUILD_URL}"'Allure_Test_Report/",
+                                    "url": "'"${BUILD_URL}"'allure/",
                                     "style": "danger"
                                   },
                                   {
@@ -379,15 +369,15 @@ Branch     : ${env.GIT_BRANCH ?: 'unknown'}
 Commit     : ${env.GIT_COMMIT ?: 'unknown'}
 
 TEST RESULTS:
-  Total   : ${ts.total}
-  Passed  : ${ts.passed}
-  Failed  : ${ts.failed}
-  Skipped : ${ts.skipped}
+  Total    : ${ts.total}
+  Passed   : ${ts.passed}
+  Failed   : ${ts.failed}
+  Skipped  : ${ts.skipped}
   Pass Rate: ${passRate}%
 
 FAILED TESTS:${failedTestDetails}
 REPORTS:
-  Allure Report : ${BUILD_URL}Allure_Test_Report/
+  Allure Report : ${BUILD_URL}allure/
   JUnit Results : ${BUILD_URL}testReport/
   Console Output: ${BUILD_URL}console/
 
@@ -413,11 +403,7 @@ Full details: ${BUILD_URL}""",
                             "blocks": [
                               {
                                 "type": "header",
-                                "text": {
-                                  "type": "plain_text",
-                                  "text": "BUILD UNSTABLE - Swag Labs Tests",
-                                  "emoji": true
-                                }
+                                "text": {"type": "plain_text", "text": "BUILD UNSTABLE - Swag Labs Tests", "emoji": true}
                               },
                               {
                                 "type": "section",
@@ -444,7 +430,7 @@ Full details: ${BUILD_URL}""",
                                   {
                                     "type": "button",
                                     "text": {"type": "plain_text", "text": "View Allure Report", "emoji": true},
-                                    "url": "'"${BUILD_URL}"'Allure_Test_Report/",
+                                    "url": "'"${BUILD_URL}"'allure/",
                                     "style": "danger"
                                   },
                                   {
