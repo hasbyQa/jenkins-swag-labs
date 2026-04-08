@@ -195,39 +195,43 @@ PYEOF
                         def se = stack.take(1500).replace('&','&amp;').replace('<','&lt;').replace('>','&gt;')
 
                         // Summary row
-                        failRowsHtml << "<tr>" +
+                        failRowsHtml.append(
+                            "<tr>" +
                             "<td style='padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;color:#000'>${cls}</td>" +
                             "<td style='padding:8px 12px;border-bottom:1px solid #eee;font-family:monospace;font-size:12px;color:#000'>${tname}</td>" +
-                            "<td style='padding:8px 12px;border-bottom:1px solid #eee;color:#c62828'>${me}</td></tr>"
+                            "<td style='padding:8px 12px;border-bottom:1px solid #eee;color:#c62828'>${me}</td>" +
+                            "</tr>"
+                        )
 
                         // Bug report card
-                        failCardsHtml <<
+                        failCardsHtml.append(
                             "<div style='background:#f9f9f9;border-left:4px solid #e53935;border-radius:0 6px 6px 0;" +
                             "padding:18px 22px;margin-bottom:20px;font-size:13px;line-height:1.7;color:#000'>" +
                             "<div style='font-weight:bold;color:#b71c1c;font-size:14px;margin-bottom:14px'>" +
                             "&#128030; Bug Report &mdash; ${cls} :: ${tname}</div>" +
                             "<table style='width:100%;border-collapse:collapse'>" +
-                            row('Type',              btype) +
-                            row('Test Class',        "<code style='font-size:12px;color:#000'>${fullCls}</code>") +
-                            row('Test Method',       "<code style='font-size:12px;color:#000'>${tname}</code>") +
-                            row('API Under Test',    "<a href='https://fakestoreapi.com' style='color:#000'>https://fakestoreapi.com</a>") +
-                            row('Failure Message',   "<span style='color:#c62828;font-weight:500'>${me}</span>") +
+                            row('Type',             btype) +
+                            row('Test Class',       "<code style='font-size:12px;color:#000'>${fullCls}</code>") +
+                            row('Test Method',      "<code style='font-size:12px;color:#000'>${tname}</code>") +
+                            row('API Under Test',   "<a href='https://fakestoreapi.com' style='color:#000'>https://fakestoreapi.com</a>") +
+                            row('Failure Message',  "<span style='color:#c62828;font-weight:500'>${me}</span>") +
                             row('Steps to Reproduce',
                                 "1. Clone the repository<br>" +
                                 "2. Install Java 17+ and Maven 3.8+<br>" +
                                 "3. Run: <code style='background:#f0f0f0;padding:2px 5px;border-radius:3px;color:#000'>" +
                                 "mvn test -Dtest=${cls}#${tname} -B</code><br>" +
                                 "4. Observe the failure in Maven Surefire output") +
-                            row('Expected Behaviour','Test should pass — the API assertion must be satisfied') +
-                            row('Actual Behaviour',  "<span style='color:#c62828'>${me}</span>") +
+                            row('Expected Behaviour', 'Test should pass — the API assertion must be satisfied') +
+                            row('Actual Behaviour',   "<span style='color:#c62828'>${me}</span>") +
                             row('Stack Trace',
                                 "<pre style='background:#1a1a2e;color:#e8e8f0;padding:12px 16px;border-radius:5px;" +
                                 "font-size:11px;overflow:auto;margin:4px 0;white-space:pre-wrap;line-height:1.5'>${se}</pre>") +
                             row('Allure Report',  "<a href='${bu}allure/' style='color:#000'>${bu}allure/</a>") +
-                            row('JUnit Results', "<a href='${bu}testReport/' style='color:#000'>${bu}testReport/</a>") +
+                            row('JUnit Results',  "<a href='${bu}testReport/' style='color:#000'>${bu}testReport/</a>") +
                             "</table></div>"
+                        )
 
-                        failNamesSlack << "• *${cls}* \u203a `${tname}`\n   _${msg.take(100)}_\n"
+                        failNamesSlack.append("• *${cls}* \u203a `${tname}`\n   _${msg.take(100)}_\n")
                     }
 
                     env.FAIL_ROWS_HTML   = failRowsHtml.toString()
