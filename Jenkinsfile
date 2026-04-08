@@ -1,13 +1,11 @@
 #!/usr/bin/env groovy
 
-// ── Read test counts stored by the Reports stage ─────────────────────────────
-// Counts are set as env vars by the junit() step return value in Reports stage,
-// so they are always available in post blocks without sandbox restrictions.
+// ── Read test counts stored by the Reports stage ──────────────────────────────
 def getTestSummary() {
     return [
-        total  : (env.TOTAL_TESTS  ?: '0').toInteger(),
-        passed : (env.PASSED_TESTS ?: '0').toInteger(),
-        failed : (env.FAILED_TESTS ?: '0').toInteger(),
+        total  : (env.TOTAL_TESTS   ?: '0').toInteger(),
+        passed : (env.PASSED_TESTS  ?: '0').toInteger(),
+        failed : (env.FAILED_TESTS  ?: '0').toInteger(),
         skipped: (env.SKIPPED_TESTS ?: '0').toInteger()
     ]
 }
@@ -17,14 +15,17 @@ pipeline {
 
     options {
         buildDiscarder(logRotator(numToKeepStr: '15'))
-        timeout(time: 45, unit: 'MINUTES')
+        // API tests are fast — 15 minutes is more than enough
+        timeout(time: 15, unit: 'MINUTES')
     }
 
     triggers {
+        // Trigger a build automatically on every GitHub push
         githubPush()
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 echo "Checking out code from GitHub..."
@@ -34,7 +35,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo "Building project with clean compilation..."
+                echo "Compiling project..."
                 sh 'mvn clean compile -B -q'
                 echo "Build completed successfully"
             }
@@ -42,9 +43,10 @@ pipeline {
 
         stage('Test') {
             steps {
-                echo "Running test suite..."
+                echo "Running API test suite against fakestoreapi.com..."
+                // catchError keeps the pipeline running so reports are always published
                 catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
-                    sh 'SELENIUM_TIMEOUT=60 mvn test -B -Dmaven.surefire.timeout=1200'
+                    sh 'mvn test -B'
                 }
             }
         }
@@ -53,9 +55,7 @@ pipeline {
             steps {
                 echo "Publishing test reports..."
 
-                // Publish JUnit results and capture counts into env vars for post blocks.
-                // junit() returns a TestResultSummary — storing here avoids sandbox issues
-                // with currentBuild.testResultAction in post blocks.
+                // Publish JUnit results and capture counts for use in notifications
                 script {
                     def results = junit testResults: 'target/surefire-reports/**/*.xml',
                                         allowEmptyResults: true
@@ -66,19 +66,19 @@ pipeline {
                     env.PASS_RATE     = results.totalCount > 0
                         ? "${(int)(((results.totalCount - results.failCount - results.skipCount) / results.totalCount) * 100)}"
                         : "0"
-                    echo "Tests: total=${env.TOTAL_TESTS} passed=${env.PASSED_TESTS} failed=${env.FAILED_TESTS} skipped=${env.SKIPPED_TESTS}"
+                    echo "Tests: total=${env.TOTAL_TESTS} passed=${env.PASSED_TESTS} failed=${env.FAILED_TESTS}"
                 }
 
-                // Publish Allure report using the Jenkins Allure plugin.
-                // Requires: Manage Jenkins → Tools → Allure Commandline → name: "allure"
-                // Report is served at ${BUILD_URL}allure/
+                // Publish Allure report — requires Allure Commandline configured in
+                // Manage Jenkins > Tools > Allure Commandline > name: allure
                 allure([
-                    commandline        : 'allure',
-                    results            : [[path: 'target/allure-results']],
-                    reportBuildPolicy  : 'ALWAYS',
-                    includeProperties  : false
+                    commandline      : 'allure',
+                    results          : [[path: 'target/allure-results']],
+                    reportBuildPolicy: 'ALWAYS',
+                    includeProperties: false
                 ])
 
+                // Keep test result files for later review
                 archiveArtifacts artifacts: 'target/surefire-reports/**/*.xml, target/allure-results/**',
                                   allowEmptyArchive: true
 
@@ -88,8 +88,7 @@ pipeline {
     }
 
     post {
-        // cleanup runs last — after success/failure/unstable — so getTestSummary()
-        // can still read surefire XMLs from the workspace before it is wiped
+        // cleanup always runs last — workspace is wiped after notifications fire
         cleanup {
             echo "Cleaning workspace..."
             cleanWs()
@@ -145,7 +144,7 @@ Full details: ${BUILD_URL}""",
                             "blocks": [
                               {
                                 "type": "header",
-                                "text": {"type": "plain_text", "text": "BUILD PASSED - Swag Labs Tests", "emoji": true}
+                                "text": {"type": "plain_text", "text": "BUILD PASSED - Fake Store API Tests", "emoji": true}
                               },
                               {
                                 "type": "section",
@@ -214,7 +213,6 @@ TEST RESULTS:
   Skipped  : ${env.SKIPPED_TESTS ?: '0'}
   Pass Rate: ${env.PASS_RATE ?: '0'}%
 
-
 REPORTS:
   Allure Report : ${BUILD_URL}allure/
   JUnit Results : ${BUILD_URL}testReport/
@@ -244,7 +242,7 @@ Full details: ${BUILD_URL}""",
                             "blocks": [
                               {
                                 "type": "header",
-                                "text": {"type": "plain_text", "text": "BUILD FAILED - Swag Labs Tests", "emoji": true}
+                                "text": {"type": "plain_text", "text": "BUILD FAILED - Fake Store API Tests", "emoji": true}
                               },
                               {
                                 "type": "section",
@@ -278,11 +276,6 @@ Full details: ${BUILD_URL}""",
                                     "type": "button",
                                     "text": {"type": "plain_text", "text": "View Build Logs", "emoji": true},
                                     "url": "'"${BUILD_URL}"'console"
-                                  },
-                                  {
-                                    "type": "button",
-                                    "text": {"type": "plain_text", "text": "Test Results", "emoji": true},
-                                    "url": "'"${BUILD_URL}"'testReport"
                                   }
                                 ]
                               }
@@ -318,7 +311,6 @@ TEST RESULTS:
   Skipped  : ${env.SKIPPED_TESTS ?: '0'}
   Pass Rate: ${env.PASS_RATE ?: '0'}%
 
-
 REPORTS:
   Allure Report : ${BUILD_URL}allure/
   JUnit Results : ${BUILD_URL}testReport/
@@ -348,7 +340,7 @@ Full details: ${BUILD_URL}""",
                             "blocks": [
                               {
                                 "type": "header",
-                                "text": {"type": "plain_text", "text": "BUILD UNSTABLE - Swag Labs Tests", "emoji": true}
+                                "text": {"type": "plain_text", "text": "BUILD UNSTABLE - Fake Store API Tests", "emoji": true}
                               },
                               {
                                 "type": "section",

@@ -6,49 +6,43 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- PROJECT IDENTITY -->
-    <groupId>com.swaglabs</groupId>
-    <artifactId>swag-labs-tests</artifactId>
+    <groupId>com.fakestoreapi</groupId>
+    <artifactId>fakestore-api-tests</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Swag Labs Docker Test Suite</name>
+    <name>Fake Store API Test Suite</name>
     <description>
-        Automated UI tests for Swag Labs (saucedemo.com) using
-        Selenium WebDriver and JUnit 5, containerized with Docker.
+        REST Assured API tests for fakestoreapi.com running in a Jenkins CI/CD pipeline.
     </description>
 
-    <!-- GLOBAL PROPERTIES -->
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <selenium.version>4.18.1</selenium.version>
         <junit.version>5.10.2</junit.version>
-        <webdrivermanager.version>5.7.0</webdrivermanager.version>
-        <maven.surefire.version>3.2.5</maven.surefire.version>
+        <restassured.version>5.4.0</restassured.version>
         <allure.version>2.25.0</allure.version>
+        <maven.surefire.version>3.2.5</maven.surefire.version>
     </properties>
 
-    <!-- DEPENDENCIES -->
     <dependencies>
 
-        <!-- Selenium WebDriver -->
+        <!-- REST Assured — sends HTTP requests and verifies responses -->
         <dependency>
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-java</artifactId>
-            <version>${selenium.version}</version>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>${restassured.version}</version>
+            <scope>test</scope>
         </dependency>
 
-        <!-- JUnit 5 API -->
+        <!-- JUnit 5 — test framework -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-
-        <!-- JUnit 5 Engine -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
@@ -56,15 +50,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- WebDriverManager -->
-        <dependency>
-            <groupId>io.github.bonigarcia</groupId>
-            <artifactId>webdrivermanager</artifactId>
-            <version>${webdrivermanager.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Allure JUnit5 Listener - Generates detailed reports -->
+        <!-- Allure JUnit 5 — attaches test results to Allure report -->
         <dependency>
             <groupId>io.qameta.allure</groupId>
             <artifactId>allure-junit5</artifactId>
@@ -72,14 +58,22 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- SLF4J API - Logging facade -->
+        <!-- Allure REST Assured — attaches request/response details to Allure -->
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>2.0.12</version>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-rest-assured</artifactId>
+            <version>${allure.version}</version>
+            <scope>test</scope>
         </dependency>
 
-        <!-- Logback - SLF4J implementation with Allure integration -->
+        <!-- Jackson — parses JSON response bodies -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.16.1</version>
+        </dependency>
+
+        <!-- Logback — logging implementation -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
@@ -88,11 +82,9 @@
 
     </dependencies>
 
-    <!-- BUILD PLUGINS -->
     <build>
         <plugins>
 
-            <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -103,23 +95,20 @@
                 </configuration>
             </plugin>
 
-            <!-- Maven Surefire Plugin - Runs tests with Allure extension -->
+            <!-- Runs tests; auto-discovers AllureJunit5 extension via ServiceLoader -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven.surefire.version}</version>
                 <configuration>
-                    <useModulePath>false</useModulePath>
                     <systemPropertyVariables>
-                        <!-- Required for JUnit 5: auto-discovers AllureJunit5 extension via ServiceLoader -->
                         <junit.jupiter.extensions.autodetection.enabled>true</junit.jupiter.extensions.autodetection.enabled>
-                        <!-- Write allure results to standard location -->
                         <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
 
-            <!-- Allure Maven Plugin - Generates HTML reports -->
+            <!-- Generates the Allure HTML report from test results -->
             <plugin>
                 <groupId>io.qameta.allure</groupId>
                 <artifactId>allure-maven</artifactId>

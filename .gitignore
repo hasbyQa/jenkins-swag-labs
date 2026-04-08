@@ -38,3 +38,6 @@ logs/
 .allure/
 allure-results/
 
+
+# Claude Code
+.claude/
