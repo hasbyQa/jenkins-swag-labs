@@ -1,15 +1,5 @@
 #!/usr/bin/env groovy
 
-// ── Read test counts stored by the Reports stage ──────────────────────────────
-def getTestSummary() {
-    return [
-        total  : (env.TOTAL_TESTS   ?: '0').toInteger(),
-        passed : (env.PASSED_TESTS  ?: '0').toInteger(),
-        failed : (env.FAILED_TESTS  ?: '0').toInteger(),
-        skipped: (env.SKIPPED_TESTS ?: '0').toInteger()
-    ]
-}
-
 pipeline {
     agent any
 
