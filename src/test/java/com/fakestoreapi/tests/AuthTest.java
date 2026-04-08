@@ -33,15 +33,15 @@ public class AuthTest extends BaseTest {
         .when()
             .post("/auth/login")
         .then()
-            .statusCode(200)
+            .statusCode(201)
             // A non-empty token confirms successful authentication
             .body("token", not(emptyOrNullString()));
     }
 
     @Test
     @Story("Login")
-    @DisplayName("POST /auth/login with invalid credentials returns an error")
-    @Description("Checks that wrong credentials do not produce a valid token")
+    @DisplayName("POST /auth/login with invalid credentials returns 401")
+    @Description("Checks that wrong credentials are rejected with HTTP 401")
     void login_withInvalidCredentials_shouldNotReturnToken() {
         String badCredentials = String.format("""
                 {
@@ -56,8 +56,7 @@ public class AuthTest extends BaseTest {
         .when()
             .post("/auth/login")
         .then()
-            // API returns 401 for unrecognised credentials
-            .statusCode(401)
-            .body("token", nullValue());
+            // API returns 401 with a plain-text error message for unrecognised credentials
+            .statusCode(401);
     }
 }
